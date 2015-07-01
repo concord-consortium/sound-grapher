@@ -10,6 +10,8 @@ function OScopeGraph(){
     this.height = canvas.height;
     ctx = canvas.getContext( '2d' );
 
+    this.scale = this.height/256;  // scaling factor so that points are drawn at the vertical center
+
     if (opts.container) {
       opts.container.appendChild( canvas );
     } else {
@@ -78,14 +80,16 @@ function OScopeGraph(){
   this._drawFrequencyGrid = function _drawFrequencyGrid() {
   };
 
+  // data is an array of values from 0-255.
+  // scale them such that 128 gets drawn at the vertical center.
   this._drawScope = function _drawScope(data, offset) {
     ctx.beginPath();
 
-    for (var i=offset, j=0; j<(this.width-offset); i++, j++) {
+    for (var i=offset, j=0; i<this.width; i++, j++) {
       if (j === 0) {
-        ctx.moveTo(0,this.height-data[i]);
+        ctx.moveTo(0,this.height-(data[i]*this.scale));
       }
-      ctx.lineTo(j,this.height-data[i]);
+      ctx.lineTo(j,this.height-(data[i]*this.scale));
     }
 
     ctx.stroke();
