@@ -16,11 +16,25 @@ function OScopeGraph(){
       document.body.appendChild( canvas );
     }
 
-    this.drawGrid();
+    this.drawStyle = opts.drawStyle || 'scope'; // Other valid options: 'frequency'
+
+    this._drawGrid();
     return canvas;
   };
 
-  this.drawGrid = function drawGrid() {
+  this.draw = function draw(data, offset) {
+    this._drawGrid();
+
+    ctx.strokeStyle = "white";
+
+    if (this.drawStyle === 'scope') {
+      this._drawScope(data, offset);
+    } else {
+      this._drawFrequency(data);
+    }
+  };
+
+  this._drawGrid = function _drawGrid() {
     ctx.strokeStyle = "red";
     ctx.lineWidth = 1;
 
@@ -32,6 +46,15 @@ function OScopeGraph(){
     ctx.moveTo(0,this.height);
     ctx.lineTo(this.width,this.height);
     ctx.stroke();
+
+    if (this.drawStyle === 'scope') {
+      this._drawOscopeGrid();
+    } else {
+      this._drawFrequencyGrid();
+    }
+  };
+
+  this._drawOscopeGrid = function _drawOscopeGrid() {
     ctx.save();
     ctx.strokeStyle = "#006644";
     ctx.beginPath();
@@ -52,16 +75,29 @@ function OScopeGraph(){
     ctx.stroke();
   };
 
-  this.draw = function draw(data, offset) {
-    this.drawGrid();
+  this._drawFrequencyGrid = function _drawFrequencyGrid() {
+  };
 
-    ctx.strokeStyle = "white";
-
+  this._drawScope = function _drawScope(data, offset) {
     ctx.beginPath();
-    ctx.moveTo(0,this.height-data[0]);
 
-    for (var i=offset, j=0; j<(this.width-offset); i++, j++)
+    for (var i=offset, j=0; j<(this.width-offset); i++, j++) {
+      if (j === 0) {
+        ctx.moveTo(0,this.height-data[i]);
+      }
       ctx.lineTo(j,this.height-data[i]);
+    }
+
+    ctx.stroke();
+  };
+
+  this._drawFrequency = function _drawFrequency(data) {
+    ctx.beginPath();
+
+    for (var i=0; i<this.width; i++) {
+      ctx.moveTo(i,this.height);
+      ctx.lineTo(i,this.height-data[i]);
+    }
 
     ctx.stroke();
   };

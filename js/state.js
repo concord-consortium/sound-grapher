@@ -1,8 +1,8 @@
 (function() {
   window.SoundGrapherManager = machina.Fsm.extend({
-    _WIDTH: 584,
+    _WIDTH: 512,
     _HEIGHT: 224,
-    _MINVAL: 120,  // 114 == zero.  _MINVAL is the "minimum detected signal" level.
+    _MINVAL: 118,  // 112 == zero.  _MINVAL is the "minimum detected signal" level.
     _audioContext: null,
     _userMedia: null,
     _analyser: null,
@@ -48,8 +48,13 @@
         setupStream: function() {
           var input = this._audioContext.createMediaStreamSource(this._userMedia);
           this._analyser = this._audioContext.createAnalyser();
-          this._analyser.fftSize = 1024;
+          this._analyser.fftSize = 4096;
+          this._analyser.minDecibels = -80;
+          this._analyser.maxDecibels = -10;
           input.connect(this._analyser);
+
+          console.log("Sample rate: " + this._audioContext.sampleRate);
+          console.log("Max frequency display: " + (this._WIDTH*this._audioContext.sampleRate/this._analyser.fftSize));
 
           this.transition('initializeApp');
         }
@@ -63,19 +68,28 @@
           this.transition('notListening');
         },
         setupListeners: function() {
+          var fsm = this;
           $('.top .start').click(function() {
-            this.handle('topClick');
-          }.bind(this));
+            fsm.handle('topClick');
+          });
 
           $('.bottom .start').click(function() {
-            this.handle('bottomClick');
-          }.bind(this));
+            fsm.handle('bottomClick');
+          });
+
+          $('.top .display-style').change(function() {
+            fsm.handle('displayStyle', fsm._topGraph, $(this).val());
+          });
+
+          $('.bottom .display-style').change(function() {
+            fsm.handle('displayStyle', fsm._bottomGraph, $(this).val());
+          });
         },
         setupGraphs: function() {
           this._topGraph = new OScopeGraph();
-          this._topGraph.setup({container: $('.top .graph')[0], width: this._WIDTH, height: this._HEIGHT});
+          this._topGraph.setup({container: $('.top .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
           this._bottomGraph = new OScopeGraph();
-          this._bottomGraph.setup({container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT});
+          this._bottomGraph.setup({container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
         },
         setupLoop: function() {
           // The main repeating loop which processes the incoming data and draws it on the oscilloscope
@@ -86,12 +100,16 @@
                 // some time to warm up or something
                 frameNumber++;
                 if(frameNumber >= 10 && this._collectingGraph){
-                  this._analyser.getByteTimeDomainData(this._data);
+                  if (this._collectingGraph.drawStyle === 'scope') {
+                    this._analyser.getByteTimeDomainData(this._data);
 
-                  zeroCross = this._findFirstPositiveZeroCrossing(this._data, this._WIDTH);
-                  if (zeroCross===0) zeroCross=1;
-
-                  this._collectingGraph.draw(this._data, zeroCross);
+                    zeroCross = this._findFirstPositiveZeroCrossing(this._data, this._WIDTH);
+                    if (zeroCross===0) zeroCross=1;
+                    this._collectingGraph.draw(this._data, zeroCross);
+                  } else {
+                    this._analyser.getByteFrequencyData(this._data);
+                    this._collectingGraph.draw(this._data);
+                  }
                 }
                 rafID = requestAnimFrame( update );
               }.bind(this);
@@ -113,6 +131,10 @@
         },
         bottomClick: function() {
           this.transition('bottomListening');
+        },
+        displayStyle: function(graph, style) {
+          graph.drawStyle = style;
+          graph.draw([], 0);
         }
       },
       topListening: {
@@ -127,6 +149,9 @@
         bottomClick: function() {
           // Shouldn't happen, but just in case...
           this.transition('bottomListening');
+        },
+        displayStyle: function(graph, style) {
+          graph.drawStyle = style;
         }
       },
       bottomListening: {
@@ -141,6 +166,9 @@
         },
         bottomClick: function() {
           this.transition('notListening');
+        },
+        displayStyle: function(graph, style) {
+          graph.drawStyle = style;
         }
       }
     },
