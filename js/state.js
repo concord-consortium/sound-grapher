@@ -2,7 +2,7 @@
   window.SoundGrapherManager = machina.Fsm.extend({
     _WIDTH: 512,
     _HEIGHT: 224,
-    _MINVAL: 118,  // 112 == zero.  _MINVAL is the "minimum detected signal" level.
+    _MINVAL: 134,  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
     _audioContext: null,
     _userMedia: null,
     _analyser: null,
@@ -179,7 +179,7 @@
       var t;
 
       // advance until we're zero or negative
-      while (i<buflen && (buf[i] > this._HEIGHT/2 ) )
+      while (i<buflen && (buf[i] > 128 ) )
         i++;
 
       if (i>=buflen)
@@ -187,7 +187,7 @@
 
       // advance until we're above _MINVAL, keeping track of last zero.
       while (i<buflen && ((t=buf[i]) < this._MINVAL )) {
-        if (t >= this._HEIGHT/2) {
+        if (t >= 128) {
           if (last_zero == -1)
             last_zero = i;
         } else
