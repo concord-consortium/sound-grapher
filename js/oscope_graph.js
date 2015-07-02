@@ -30,6 +30,7 @@ var OScopeGraph = function(analyser, opts) {
 };
 
 // Some getter/setters for values that make changes to the analyser
+// Frequency view width is width in Hertz to display
 Object.defineProperty(OScopeGraph.prototype, 'frequencyViewWidth', {
   get: function() {
     return (this._data.length*this._frequencyBinWidth);
@@ -38,6 +39,20 @@ Object.defineProperty(OScopeGraph.prototype, 'frequencyViewWidth', {
   set: function(widthHz) {
     // reset the goal data size
     var len = Math.ceil(widthHz / this._frequencyBinWidth);
+    this._data = new Uint8Array(len);
+    this._xStep = this.width / len;
+  }
+});
+
+// Scope view width is width in milliseconds to display
+Object.defineProperty(OScopeGraph.prototype, 'scopeViewWidth', {
+  get: function() {
+    return (1/this.analyser.context.sampleRate)*this._data.length*1000;
+  },
+
+  set: function(widthMs) {
+    // reset the goal data size
+    var len = Math.ceil((widthMs/1000) / (1/this.analyser.context.sampleRate));
     this._data = new Uint8Array(len);
     this._xStep = this.width / len;
   }
@@ -110,11 +125,12 @@ OScopeGraph.prototype._drawFrequencyGrid = function() {
 OScopeGraph.prototype._drawScope = function _drawScope(data, offset) {
   this._ctx.beginPath();
 
-  for (var i=offset, j=0; i<this.width; i++, j++) {
+  for (var i=offset, j=0; i<data.length; i++, j++) {
     if (j === 0) {
       this._ctx.moveTo(0,this.height-(data[i]*this._internalScale*this.scale));
+    } else {
+      this._ctx.lineTo(j*this._xStep,this.height-(data[i]*this._internalScale*this.scale));
     }
-    this._ctx.lineTo(j,this.height-(data[i]*this._internalScale*this.scale));
   }
 
   this._ctx.stroke();
