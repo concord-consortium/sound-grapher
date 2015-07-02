@@ -15,6 +15,8 @@ var OScopeGraph = function(analyser, opts) {
   this.scale = opts.scale || 1;
 
   this._data = new Uint8Array(canvas.width);
+  this._xStep = 1;
+  this._frequencyBinWidth = this.analyser.context.sampleRate/this.analyser.fftSize;
 
   if (opts.container) {
     opts.container.appendChild( canvas );
@@ -26,6 +28,20 @@ var OScopeGraph = function(analyser, opts) {
 
   this._drawGrid();
 };
+
+// Some getter/setters for values that make changes to the analyser
+Object.defineProperty(OScopeGraph.prototype, 'frequencyViewWidth', {
+  get: function() {
+    return (this._data.length*this._frequencyBinWidth);
+  },
+
+  set: function(widthHz) {
+    // reset the goal data size
+    var len = Math.ceil(widthHz / this._frequencyBinWidth);
+    this._data = new Uint8Array(len);
+    this._xStep = this.width / len;
+  }
+});
 
 OScopeGraph.prototype.draw = function(data, offset) {
     this._drawGrid();
@@ -107,9 +123,12 @@ OScopeGraph.prototype._drawScope = function _drawScope(data, offset) {
 OScopeGraph.prototype._drawFrequency = function(data) {
   this._ctx.beginPath();
 
-  for (var i=0; i<this.width; i++) {
-    this._ctx.moveTo(i,this.height);
-    this._ctx.lineTo(i,this.height-data[i]);
+  for (var i=0, j=0; i<data.length; i++, j++) {
+    if (j === 0) {
+      this._ctx.moveTo(0,this.height-data[i]);
+    } else {
+      this._ctx.lineTo(j*this._xStep,this.height-data[i]);
+    }
   }
 
   this._ctx.stroke();
