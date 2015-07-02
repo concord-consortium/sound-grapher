@@ -2,20 +2,15 @@
   window.SoundGrapherManager = machina.Fsm.extend({
     _WIDTH: 512,
     _HEIGHT: 224,
-    _MINVAL: 134,  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
+
     _audioContext: null,
     _userMedia: null,
     _analyser: null,
+
     _topGraph: null,
     _bottomGraph: null,
-    _data: null,
-    _freqs: null,
-    _freqBytes: null,
 
     initialize: function() {
-      this._data = new Uint8Array(this._WIDTH);
-      this._freqs = new Float32Array(64);
-      this._freqBytes = new Uint8Array(64);
     },
 
     initialState: 'initializeAudio',
@@ -86,8 +81,8 @@
           });
         },
         setupGraphs: function() {
-          this._topGraph    = new OScopeGraph({container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
-          this._bottomGraph = new OScopeGraph({container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+          this._topGraph    = new OScopeGraph(this._analyser, {container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+          this._bottomGraph = new OScopeGraph(this._analyser, {container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
         },
         setupLoop: function() {
           // The main repeating loop which processes the incoming data and draws it on the oscilloscope
@@ -98,16 +93,7 @@
                 // some time to warm up or something
                 frameNumber++;
                 if(frameNumber >= 10 && this._collectingGraph){
-                  if (this._collectingGraph.drawStyle === 'scope') {
-                    this._analyser.getByteTimeDomainData(this._data);
-
-                    zeroCross = this._findFirstPositiveZeroCrossing(this._data, this._WIDTH);
-                    if (zeroCross===0) zeroCross=1;
-                    this._collectingGraph.draw(this._data, zeroCross);
-                  } else {
-                    this._analyser.getByteFrequencyData(this._data);
-                    this._collectingGraph.draw(this._data);
-                  }
+                  this._collectingGraph.draw();
                 }
                 rafID = requestAnimFrame( update );
               }.bind(this);
@@ -116,7 +102,7 @@
       },
       error: {
         _onEnter: function() {
-          setTimeout(function() { alert('Unable to connect to audio input!'); }, 1);
+          setTimeout(function() { alert('Unable to connect to audio input!'); }, 1); // TODO Make this message more user-friendly.
         }
       },
       notListening: {
@@ -169,42 +155,6 @@
           graph.drawStyle = style;
         }
       }
-    },
-
-    _findFirstPositiveZeroCrossing: function(buf, buflen) {
-      var i = 0;
-      var last_zero = -1;
-      var t;
-
-      // advance until we're zero or negative
-      while (i<buflen && (buf[i] > 128 ) )
-        i++;
-
-      if (i>=buflen)
-        return 0;
-
-      // advance until we're above _MINVAL, keeping track of last zero.
-      while (i<buflen && ((t=buf[i]) < this._MINVAL )) {
-        if (t >= 128) {
-          if (last_zero == -1)
-            last_zero = i;
-        } else
-          last_zero = -1;
-        i++;
-      }
-
-      // we may have jumped over _MINVAL in one sample.
-      if (last_zero == -1)
-        last_zero = i;
-
-      if (i==buflen)  // We didn't find any positive zero crossings
-        return 0;
-
-      // The first sample might be a zero.  If so, return it.
-      if (last_zero === 0)
-        return 0;
-
-      return last_zero;
     }
   });
 

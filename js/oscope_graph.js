@@ -1,4 +1,7 @@
-window.OScopeGraph = function(opts) {
+window.OScopeGraph = function(analyser, opts) {
+  this.analyser = analyser;
+  this._MINVAL = 134;  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
+
   var canvas = document.createElement( 'canvas' );
   canvas.className = 'oscope';
   canvas.width = opts.width || 512;
@@ -9,6 +12,8 @@ window.OScopeGraph = function(opts) {
 
   this._internalScale = this.height/256;  // scaling factor so that points are drawn at the vertical center
   this.scale = opts.scale || 1;
+
+  this._data = new Uint8Array(canvas.width);
 
   if (opts.container) {
     opts.container.appendChild( canvas );
@@ -27,9 +32,15 @@ window.OScopeGraph.prototype.draw = function(data, offset) {
     this._ctx.strokeStyle = "white";
 
     if (this.drawStyle === 'scope') {
-      this._drawScope(data, offset);
+      this.analyser.getByteTimeDomainData(this._data);
+
+      zeroCross = this._findFirstPositiveZeroCrossing(this._data, this.width);
+      if (zeroCross===0) zeroCross=1;
+
+      this._drawScope(this._data, zeroCross);
     } else {
-      this._drawFrequency(data);
+      this.analyser.getByteFrequencyData(this._data);
+      this._drawFrequency(this._data);
     }
   };
 
@@ -101,4 +112,40 @@ window.OScopeGraph.prototype._drawFrequency = function(data) {
   }
 
   this._ctx.stroke();
+};
+
+window.OScopeGraph.prototype._findFirstPositiveZeroCrossing = function(buf, buflen) {
+  var i = 0;
+  var last_zero = -1;
+  var t;
+
+  // advance until we're zero or negative
+  while (i<buflen && (buf[i] > 128 ) )
+    i++;
+
+  if (i>=buflen)
+    return 0;
+
+  // advance until we're above _MINVAL, keeping track of last zero.
+  while (i<buflen && ((t=buf[i]) < this._MINVAL )) {
+    if (t >= 128) {
+      if (last_zero == -1)
+        last_zero = i;
+    } else
+      last_zero = -1;
+    i++;
+  }
+
+  // we may have jumped over _MINVAL in one sample.
+  if (last_zero == -1)
+    last_zero = i;
+
+  if (i==buflen)  // We didn't find any positive zero crossings
+    return 0;
+
+  // The first sample might be a zero.  If so, return it.
+  if (last_zero === 0)
+    return 0;
+
+  return last_zero;
 };
