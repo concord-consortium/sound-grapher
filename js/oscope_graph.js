@@ -2,6 +2,7 @@
 var OScopeGraph = function(analyser, opts) {
   this.analyser = analyser;
   this._MINVAL = 134;  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
+  this._previous = {};
 
   var canvas = document.createElement( 'canvas' );
   canvas.className = 'oscope';
@@ -24,7 +25,7 @@ var OScopeGraph = function(analyser, opts) {
     document.body.appendChild( canvas );
   }
 
-  this.drawStyle = opts.drawStyle || 'scope'; // Other valid options: 'frequency'
+  this._drawStyle = opts.drawStyle || 'scope'; // Other valid options: 'frequency'
 
   this._drawGrid();
 };
@@ -55,6 +56,31 @@ Object.defineProperty(OScopeGraph.prototype, 'scopeViewWidth', {
     var len = Math.ceil((widthMs/1000) / (1/this.analyser.context.sampleRate));
     this._data = new Uint8Array(len);
     this._xStep = this.width / len;
+  }
+});
+
+// Set the graph style: scope or frequency
+Object.defineProperty(OScopeGraph.prototype, 'drawStyle', {
+  get: function() {
+    return this._drawStyle;
+  },
+
+  set: function(style) {
+    if (this._drawStyle !== style) {
+      // Store the previous data length so we can restore it when we switch back
+      this._previous[this._drawStyle] = {
+        len: this._data.length,
+        xStep: this._xStep
+      };
+
+      this._drawStyle = style;
+
+      if (this._previous[style]) {
+        var s = this._previous[style];
+        this._data = new Uint8Array(s.len);
+        this._xStep = s.xStep;
+      }
+    }
   }
 });
 
