@@ -1,4 +1,5 @@
-window.OScopeGraph = function(analyser, opts) {
+(function() {
+var OScopeGraph = function(analyser, opts) {
   this.analyser = analyser;
   this._MINVAL = 134;  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
 
@@ -26,7 +27,7 @@ window.OScopeGraph = function(analyser, opts) {
   this._drawGrid();
 };
 
-window.OScopeGraph.prototype.draw = function(data, offset) {
+OScopeGraph.prototype.draw = function(data, offset) {
     this._drawGrid();
 
     this._ctx.strokeStyle = "white";
@@ -44,7 +45,7 @@ window.OScopeGraph.prototype.draw = function(data, offset) {
     }
   };
 
-window.OScopeGraph.prototype._drawGrid = function() {
+OScopeGraph.prototype._drawGrid = function() {
   this._ctx.strokeStyle = "red";
   this._ctx.lineWidth = 1;
 
@@ -64,7 +65,7 @@ window.OScopeGraph.prototype._drawGrid = function() {
   }
 };
 
-window.OScopeGraph.prototype._drawOscopeGrid = function() {
+OScopeGraph.prototype._drawOscopeGrid = function() {
   this._ctx.save();
   this._ctx.strokeStyle = "#006644";
   this._ctx.beginPath();
@@ -85,12 +86,12 @@ window.OScopeGraph.prototype._drawOscopeGrid = function() {
   this._ctx.stroke();
 };
 
-window.OScopeGraph.prototype._drawFrequencyGrid = function() {
+OScopeGraph.prototype._drawFrequencyGrid = function() {
 };
 
 // data is an array of values from 0-255.
 // scale them such that 128 gets drawn at the vertical center.
-window.OScopeGraph.prototype._drawScope = function _drawScope(data, offset) {
+OScopeGraph.prototype._drawScope = function _drawScope(data, offset) {
   this._ctx.beginPath();
 
   for (var i=offset, j=0; i<this.width; i++, j++) {
@@ -103,7 +104,7 @@ window.OScopeGraph.prototype._drawScope = function _drawScope(data, offset) {
   this._ctx.stroke();
 };
 
-window.OScopeGraph.prototype._drawFrequency = function(data) {
+OScopeGraph.prototype._drawFrequency = function(data) {
   this._ctx.beginPath();
 
   for (var i=0; i<this.width; i++) {
@@ -114,7 +115,7 @@ window.OScopeGraph.prototype._drawFrequency = function(data) {
   this._ctx.stroke();
 };
 
-window.OScopeGraph.prototype._findFirstPositiveZeroCrossing = function(buf, buflen) {
+OScopeGraph.prototype._findFirstPositiveZeroCrossing = function(buf, buflen) {
   var i = 0;
   var last_zero = -1;
   var t;
@@ -149,3 +150,6 @@ window.OScopeGraph.prototype._findFirstPositiveZeroCrossing = function(buf, bufl
 
   return last_zero;
 };
+
+window.OScopeGraph = OScopeGraph;
+})();
