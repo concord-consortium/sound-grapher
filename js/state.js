@@ -86,10 +86,8 @@
           });
         },
         setupGraphs: function() {
-          this._topGraph = new OScopeGraph();
-          this._topGraph.setup({container: $('.top .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
-          this._bottomGraph = new OScopeGraph();
-          this._bottomGraph.setup({container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+          this._topGraph    = new OScopeGraph({container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+          this._bottomGraph = new OScopeGraph({container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
         },
         setupLoop: function() {
           // The main repeating loop which processes the incoming data and draws it on the oscilloscope
