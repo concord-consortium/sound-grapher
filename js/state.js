@@ -110,7 +110,7 @@
       },
       error: {
         _onEnter: function() {
-          setTimeout(function() { alert('Unable to connect to audio input!'); }, 1); // TODO Make this message more user-friendly.
+          new ErrorDialog();
         }
       },
       notListening: {
