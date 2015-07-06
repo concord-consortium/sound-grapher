@@ -83,6 +83,12 @@
         setupGraphs: function() {
           this._topGraph    = new OScopeGraph(this._analyser, {container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
           this._bottomGraph = new OScopeGraph(this._analyser, {container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+
+          this._topGraph.scopeViewWidth = 30;
+          this._topGraph.frequencyViewWidth = 2000;
+
+          this._bottomGraph.scopeViewWidth = 30;
+          this._bottomGraph.frequencyViewWidth = 2000;
         },
         setupLoop: function() {
           // The main repeating loop which processes the incoming data and draws it on the oscilloscope
