@@ -133,7 +133,6 @@
         },
         displayStyle: function(graph, style) {
           graph.drawStyle = style;
-          graph.draw([], 0);
         },
         settings: function(graph) {
           new SettingsDialog(graph);

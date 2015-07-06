@@ -45,6 +45,7 @@ Object.defineProperty(OScopeGraph.prototype, 'frequencyViewWidth', {
     if (this._drawStyle === 'frequency') {
       this._data = new Uint8Array(len);
       this._xStep = xStep;
+      this._drawGrid();
     } else {
       this._previous.frequency = {
         len: len,
@@ -69,6 +70,7 @@ Object.defineProperty(OScopeGraph.prototype, 'scopeViewWidth', {
       this._xStep = xStep;
       // reset the fftSize so that we only collect as many samples as we need.
       this.analyser.fftSize = this._findOptimalFftSize(len);
+      this._drawGrid();
     } else {
       this._previous.scope = {
         len: len,
@@ -105,11 +107,12 @@ Object.defineProperty(OScopeGraph.prototype, 'drawStyle', {
       } else {
         this.analyser.fftSize = 4096;
       }
+      this._drawGrid();
     }
   }
 });
 
-OScopeGraph.prototype.draw = function(data, offset) {
+OScopeGraph.prototype.draw = function() {
     this._drawGrid();
 
     this._ctx.strokeStyle = "white";
@@ -128,17 +131,9 @@ OScopeGraph.prototype.draw = function(data, offset) {
   };
 
 OScopeGraph.prototype._drawGrid = function() {
-  this._ctx.strokeStyle = "red";
   this._ctx.lineWidth = 1;
 
   this._ctx.clearRect(0,0,this.width,this.height);
-  this._ctx.beginPath();
-  this._ctx.moveTo(0,0);
-  this._ctx.lineTo(this.width,0);
-  this._ctx.stroke();
-  this._ctx.moveTo(0,this.height);
-  this._ctx.lineTo(this.width,this.height);
-  this._ctx.stroke();
 
   if (this.drawStyle === 'scope') {
     this._drawOscopeGrid();
@@ -149,7 +144,9 @@ OScopeGraph.prototype._drawGrid = function() {
 
 OScopeGraph.prototype._drawOscopeGrid = function() {
   this._ctx.save();
-  this._ctx.strokeStyle = "#006644";
+
+  // horizontal lines at +50% and -50% amplitude
+  this._ctx.strokeStyle = "#999999";
   this._ctx.beginPath();
   if (this._ctx.setLineDash)
     this._ctx.setLineDash([5]);
@@ -160,15 +157,45 @@ OScopeGraph.prototype._drawOscopeGrid = function() {
   this._ctx.lineTo(this.width,this.height*3/4);
   this._ctx.stroke();
 
+  // center horizontal line
   this._ctx.restore();
   this._ctx.beginPath();
   this._ctx.strokeStyle = "blue";
   this._ctx.moveTo(0,this.height/2);
   this._ctx.lineTo(this.width,this.height/2);
   this._ctx.stroke();
+
+  // vertical lines and labels
+  this._ctx.strokeStyle = "#999999";
+  var pxPerMs = this.width / this.scopeViewWidth,
+      msPerLine = Math.round(this.scopeViewWidth / 6),
+      i = 1, dx = 0;
+  for (dx = 0, i = 1; dx < this.width; i++) {
+    this._ctx.beginPath();
+    dx = i*msPerLine*pxPerMs;
+    this._ctx.moveTo(dx,0);
+    this._ctx.lineTo(dx,this.height);
+    this._ctx.stroke();
+    this._ctx.strokeText(""+Math.round(msPerLine*i)+" ms", dx + 5,this.height/2-5);
+  }
 };
 
 OScopeGraph.prototype._drawFrequencyGrid = function() {
+  // vertical lines and labels
+  this._ctx.strokeStyle = "#999999";
+  var correctedFrequencyViewWidth = Math.floor(this.frequencyViewWidth / 1000)*1000,
+      pxPerHz = this.width / this.frequencyViewWidth,
+      hzPerLine = Math.round(correctedFrequencyViewWidth / 8),
+      i = 1,
+      dx = 0;
+  for (dx = 0, i = 1; dx < this.width; i++) {
+    this._ctx.beginPath();
+    dx = i*hzPerLine*pxPerHz;
+    this._ctx.moveTo(dx,0);
+    this._ctx.lineTo(dx,this.height);
+    this._ctx.stroke();
+    this._ctx.strokeText(""+Math.round(hzPerLine*i)+" Hz", dx + 5,this.height/2-5);
+  }
 };
 
 // data is an array of values from 0-255.
