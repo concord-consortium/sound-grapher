@@ -3,6 +3,7 @@ var OScopeGraph = function(analyser, opts) {
   this.analyser = analyser;
   this._MINVAL = 134;  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
   this._previous = {};
+  this.triggering = opts.triggering === false ? false : true;
 
   var canvas = document.createElement( 'canvas' );
   canvas.className = 'oscope';
@@ -92,7 +93,7 @@ OScopeGraph.prototype.draw = function(data, offset) {
     if (this.drawStyle === 'scope') {
       this.analyser.getByteTimeDomainData(this._data);
 
-      zeroCross = this._findFirstPositiveZeroCrossing(this._data, this.width);
+      var zeroCross = this.triggering ? this._findFirstPositiveZeroCrossing(this._data, this.width) : 1;
       if (zeroCross===0) zeroCross=1;
 
       this._drawScope(this._data, zeroCross);
