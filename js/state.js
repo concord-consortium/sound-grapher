@@ -38,7 +38,7 @@
           }.bind(this), function(e) {
             console.log(e);
             this.transition('error');
-          });
+          }.bind(this));
         },
         setupStream: function() {
           var input = this._audioContext.createMediaStreamSource(this._userMedia);
@@ -79,6 +79,14 @@
           $('.bottom .display-style').change(function() {
             fsm.handle('displayStyle', fsm._bottomGraph, $(this).val());
           });
+
+          $('.top .settings').click(function() {
+            fsm.handle('settings', fsm._topGraph);
+          });
+
+          $('.bottom .settings').click(function() {
+            fsm.handle('settings', fsm._bottomGraph);
+          });
         },
         setupGraphs: function() {
           this._topGraph    = new OScopeGraph(this._analyser, {container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
@@ -115,6 +123,7 @@
         _onEnter: function() {
           this._collectingGraph = null;
           $('.start').prop('disabled',false).text('Record');
+          $('.settings').prop('disabled',false);
         },
         topClick: function() {
           this.transition('topListening');
@@ -125,6 +134,9 @@
         displayStyle: function(graph, style) {
           graph.drawStyle = style;
           graph.draw([], 0);
+        },
+        settings: function(graph) {
+          new SettingsDialog(graph);
         }
       },
       topListening: {
@@ -132,6 +144,7 @@
           this._collectingGraph = this._topGraph;
           $('.top .start').prop('disabled',false).text('Stop');
           $('.bottom .start').prop('disabled',true);
+          $('.settings').prop('disabled',true);
         },
         topClick: function() {
           this.transition('notListening');
@@ -149,6 +162,7 @@
           this._collectingGraph = this._bottomGraph;
           $('.top .start').prop('disabled',true);
           $('.bottom .start').prop('disabled',false).text('Stop');
+          $('.settings').prop('disabled',true);
         },
         topClick: function() {
           // Shouldn't happen, but just in case...
