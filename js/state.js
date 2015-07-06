@@ -5,7 +5,7 @@
 
     _audioContext: null,
     _userMedia: null,
-    _analyser: null,
+    _audioInput: null,
 
     _topGraph: null,
     _bottomGraph: null,
@@ -41,15 +41,9 @@
           }.bind(this));
         },
         setupStream: function() {
-          var input = this._audioContext.createMediaStreamSource(this._userMedia);
-          this._analyser = this._audioContext.createAnalyser();
-          this._analyser.fftSize = 4096;
-          this._analyser.minDecibels = -80;
-          this._analyser.maxDecibels = -10;
-          input.connect(this._analyser);
+          this._audioInput = this._audioContext.createMediaStreamSource(this._userMedia);
 
           console.log("Sample rate: " + this._audioContext.sampleRate);
-          console.log("Max frequency display: " + (this._WIDTH*this._audioContext.sampleRate/this._analyser.fftSize));
 
           this.transition('initializeApp');
         }
@@ -89,8 +83,8 @@
           });
         },
         setupGraphs: function() {
-          this._topGraph    = new OScopeGraph(this._analyser, {container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
-          this._bottomGraph = new OScopeGraph(this._analyser, {container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+          this._topGraph    = new OScopeGraph(this._audioContext, this._audioInput, {container: $('.top .graph')[0],    width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
+          this._bottomGraph = new OScopeGraph(this._audioContext, this._audioInput, {container: $('.bottom .graph')[0], width: this._WIDTH, height: this._HEIGHT, drawStyle: 'scope'});
 
           this._topGraph.scopeViewWidth = 30;
           this._topGraph.frequencyViewWidth = 2000;

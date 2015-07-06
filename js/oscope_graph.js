@@ -1,6 +1,6 @@
 (function() {
-var OScopeGraph = function(analyser, opts) {
-  this.analyser = analyser;
+var OScopeGraph = function(audioContext, audioInput, opts) {
+  this.analyser = this._createAnalyser(audioContext, audioInput);
   this._MINVAL = 134;  // 128 == zero.  _MINVAL is the "minimum detected signal" level to trigger off of.
   this._previous = {};
   this.triggering = opts.triggering === false ? false : true;
@@ -267,6 +267,16 @@ OScopeGraph.prototype._findFirstPositiveZeroCrossing = function(buf, buflen) {
 OScopeGraph.prototype._findOptimalFftSize = function(val) {
   var y = Math.floor(Math.log(val) / Math.log(2));
   return Math.pow(2, y + 1);
+};
+
+OScopeGraph.prototype._createAnalyser = function(audioContext, input) {
+  var analyser = audioContext.createAnalyser();
+  analyser.fftSize = 4096;
+  analyser.minDecibels = -80;
+  analyser.maxDecibels = -10;
+  input.connect(analyser);
+
+  return analyser;
 };
 
 window.OScopeGraph = OScopeGraph;
