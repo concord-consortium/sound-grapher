@@ -21,6 +21,10 @@
         },
         setupAudio: function() {
           window.AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!window.AudioContext) {
+            this.transition('error');
+            return;
+          }
           this._audioContext = new window.AudioContext();
 
           if (!navigator.getUserMedia) {
