@@ -46,11 +46,11 @@ canvas.oscope {
 }
 
 .backdrop {
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   text-align: center;
   z-index: 1000;
   background-color: rgba(0,0,0,0.4);
@@ -63,7 +63,7 @@ canvas.oscope {
   padding: 10px;
   background-color: white;
   border: 2px solid black;
-  box-shadow: 5px 5px 5px black;
+  box-shadow: 5px 5px 15px black;
   border-radius: 5px;
 }
 
