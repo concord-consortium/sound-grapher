@@ -40,9 +40,17 @@ Object.defineProperty(OScopeGraph.prototype, 'frequencyViewWidth', {
 
   set: function(widthHz) {
     // reset the goal data size
-    var len = Math.ceil(widthHz / this._frequencyBinWidth);
-    this._data = new Uint8Array(len);
-    this._xStep = this.width / len;
+    var len = Math.ceil(widthHz / this._frequencyBinWidth),
+        xStep = this.width / len;
+    if (this._drawStyle === 'frequency') {
+      this._data = new Uint8Array(len);
+      this._xStep = xStep;
+    } else {
+      this._previous.frequency = {
+        len: len,
+        xStep: xStep
+      };
+    }
   }
 });
 
@@ -54,9 +62,19 @@ Object.defineProperty(OScopeGraph.prototype, 'scopeViewWidth', {
 
   set: function(widthMs) {
     // reset the goal data size
-    var len = Math.ceil((widthMs/1000) / (1/this.analyser.context.sampleRate));
-    this._data = new Uint8Array(len);
-    this._xStep = this.width / len;
+    var len = Math.ceil((widthMs/1000) / (1/this.analyser.context.sampleRate)),
+        xStep = this.width / len;
+    if (this._drawStyle === 'scope') {
+      this._data = new Uint8Array(len);
+      this._xStep = xStep;
+      // reset the fftSize so that we only collect as many samples as we need.
+      this.analyser.fftSize = this._findOptimalFftSize(len);
+    } else {
+      this._previous.scope = {
+        len: len,
+        xStep: xStep
+      };
+    }
   }
 });
 
@@ -80,6 +98,12 @@ Object.defineProperty(OScopeGraph.prototype, 'drawStyle', {
         var s = this._previous[style];
         this._data = new Uint8Array(s.len);
         this._xStep = s.xStep;
+      }
+
+      if (style === 'scope') {
+        this.analyser.fftSize = this._findOptimalFftSize(this._data.length);
+      } else {
+        this.analyser.fftSize = 4096;
       }
     }
   }
@@ -211,6 +235,11 @@ OScopeGraph.prototype._findFirstPositiveZeroCrossing = function(buf, buflen) {
     return 0;
 
   return last_zero;
+};
+
+OScopeGraph.prototype._findOptimalFftSize = function(val) {
+  var y = Math.floor(Math.log(val) / Math.log(2));
+  return Math.pow(2, y + 1);
 };
 
 window.OScopeGraph = OScopeGraph;
