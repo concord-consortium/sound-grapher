@@ -14,7 +14,7 @@
 
     if (this.graph.drawStyle === 'scope') {
       this._appendTimeAxis();
-      this._appendTriggering();
+      // this._appendTriggering();  // Disabled, for now
     } else {
       this._appendFrequencyAxis();
     }
@@ -87,7 +87,7 @@
       this.graph._MINVAL = 128 - value;
     }.bind(this));
 
-    triggerSensitivityScrubber.min(-10).max(0).step(1).value(-6).orientation('horizontal');
+    triggerSensitivityScrubber.min(-10).max(0).step(1).value(128 - this.graph._MINVAL).orientation('horizontal');
   };
 
   window.SettingsDialog = SettingsDialog;
