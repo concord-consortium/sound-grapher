@@ -32,5 +32,7 @@
   // targeted script loaders such as Browserify or Webpack where the only way to
   // get to the global object is via `window`.
 
+  Shutterbug.enable('body');
+
   window.app = new SoundGrapherManager();
 })();
